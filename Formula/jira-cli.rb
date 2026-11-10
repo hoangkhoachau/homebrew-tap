@@ -1,12 +1,12 @@
 class JiraCli < Formula
-  desc "Interactive Jira command-line (fork with array custom field edit fix)"
+  desc "Interactive Jira command-line (fork: array custom field fix, larger --paginate)"
   homepage "https://github.com/hoangkhoachau/jira-cli"
   url "https://github.com/hoangkhoachau/jira-cli.git",
-      branch:   "fix/edit-array-string-custom-field",
-      revision: "f6fe2be5e5af0536c9074bb493dde3dddfc0f64a"
-  version "1.7.0-arraycf1"
+      branch:   "fork",
+      revision: "7e7555440b3565eee58758d8bbeeb1ddcf0f4b3e"
+  version "1.7.0-arraycf2"
   license "MIT"
-  head "https://github.com/hoangkhoachau/jira-cli.git", branch: "fix/edit-array-string-custom-field"
+  head "https://github.com/hoangkhoachau/jira-cli.git", branch: "fork"
 
   # `jira issue edit --custom` cannot set array custom fields whose items are
   # not options (labels, multi-checkbox, multi-picker): custom fields go into
@@ -14,6 +14,10 @@ class JiraCli < Formula
   # emitted a bare JSON array and Jira rejected the request. Fixed upstream in
   # https://github.com/ankitpokhrel/jira-cli/pull/1026 -- once that ships,
   # delete this formula and go back to homebrew/core `jira-cli`.
+  #
+  # The `fork` branch is upstream main plus that fix, and lets `--paginate`
+  # take limits up to 1000 (Jira Data Center allows 1000 per search; upstream
+  # rejects anything over the Jira Cloud cap of 100).
 
   depends_on "go" => :build
 
@@ -30,6 +34,7 @@ class JiraCli < Formula
     # submitted as a `set` operation inside the REST `update` block. This test
     # pins the generated payload for every custom field datatype.
     system "go", "test", "./pkg/jira/", "-run", "TestGetRequestDataForEditCustomFields"
+    system "go", "test", "./internal/query/", "-run", "TestGetPaginateParams"
 
     system "go", "build", *std_go_args(ldflags: ldflags, output: bin/"jira"), "./cmd/jira"
 
